@@ -1,6 +1,6 @@
 # NGINX Discord OAuth Reverse Proxy
 
-This project allows one to secure a NGINX reverse proxied site via Discord OAauth.
+This project allows one to secure a NGINX reverse proxied site via Discord OAuth.
 
 ## Setting up OAuth Process
 
