@@ -34,4 +34,4 @@ To run the process on a specific port, start the OAuth project like so:
 
 ## Setting up NGINX Config
 
-Use the nginx.conf file in the repos root and replace any instance of `https://localhost:7161` if you end up using a different port.
+Use the [nginx.conf](https://github.com/DubyaDude/nginx-discord-oauth-reverse-proxy/blob/master/nginx.conf) file in the repos root and replace any instance of `https://localhost:7161` if you end up using a different port.
