@@ -36,7 +36,7 @@ namespace Microsoft.Extensions.DependencyInjection
                     .RequireAuthenticatedUser();
 
                 IEnumerable<string>? whitelistedUsers = config?.WhitelistedUsers != null && config.WhitelistedUsers.Length > 0 ? config.WhitelistedUsers.Select(x => x.ToString()) : null;
-                IEnumerable<string>? whitelistedGuilds = config?.WhitelistedServers != null && config.WhitelistedServers.Length > 0 ? config.WhitelistedServers.Select(x => x.ToString()) : null;
+                IEnumerable<string>? whitelistedGuilds = config?.WhitelistedGuilds != null && config.WhitelistedGuilds.Length > 0 ? config.WhitelistedGuilds.Select(x => x.ToString()) : null;
 
                 if (whitelistedUsers != null || whitelistedGuilds != null)
                 {

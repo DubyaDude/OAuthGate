@@ -3,7 +3,7 @@
     public class DiscordOptions
     {
         public DiscordClientOptions Client { get; set; } = new();
-        public ulong[]? WhitelistedServers { get; set; } = null;
+        public ulong[]? WhitelistedGuilds { get; set; } = null;
         public ulong[]? WhitelistedUsers { get; set; } = null;
     }
 
