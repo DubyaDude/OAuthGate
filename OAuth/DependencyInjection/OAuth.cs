@@ -95,7 +95,6 @@ namespace Microsoft.Extensions.DependencyInjection
 
                     options.Scope.Add("identify");
                     options.Scope.Add("email");
-                    options.Scope.Add("guilds.members.read");
                     options.Scope.Add("guilds");
 
                     options.ClaimActions.MapJsonKey(ClaimTypes.NameIdentifier, "id");
