@@ -2,7 +2,7 @@
 
 This project allows one to secure a NGINX reverse proxied site via Discord OAuth.
 
-## Setting up OAuth Process
+## Setting up OAuthGate Process
 
 ### appsettings.json
 Configure the `appsettings.json` like so:
@@ -27,9 +27,9 @@ Configure the `appsettings.json` like so:
 **Whitelist Behaviour** - A user must be part of either Whitelisted Guilds or Whitelisted Users if either one has a value. If both are null/empty, any Discord Login will be allowed.
 
 ### Running on Dfferent Port
-To run the process on a specific port, start the OAuth project like so:
+To run the process on a specific port, start the OAuthGate project like so:
 ```
-./OAuth --urls=https://localhost:7161
+./OAuthGate --urls=https://localhost:7161
 ```
 
 ## Setting up NGINX Config
