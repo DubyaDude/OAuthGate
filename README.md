@@ -1,4 +1,4 @@
-# NGINX Discord OAuth Reverse Proxy
+# OAuthGate - A NGINX Discord OAuth Reverse Proxy
 
 This project allows one to secure a NGINX reverse proxied site via Discord OAuth.
 
