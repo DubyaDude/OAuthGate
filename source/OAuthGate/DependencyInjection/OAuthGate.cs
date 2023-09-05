@@ -245,7 +245,9 @@ namespace Microsoft.Extensions.DependencyInjection
 
             if (context.Request.Headers.TryGetValue("CF-Connecting-IP", out var values))
             {
+#pragma warning disable CS8604 // Possible null reference argument.
                 string originalIps = string.Join(", ", values);
+#pragma warning restore CS8604 // Possible null reference argument.
                 LoggerHelper.GlobalLogger.LogInformation("ID:[{id}] Name:[{name}] Email:[{email}] IP:[{ip}] CloudflareIP:[{cfIp}] :: {message}", id, name, email, originalIps, ip, message);
             }
             else
