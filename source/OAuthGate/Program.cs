@@ -15,7 +15,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
 });
 
-builder.Services.AddOAuth(builder.Configuration);
+builder.Services.AddOAuthGate(builder.Configuration);
 
 var app = builder.Build();
 

@@ -12,7 +12,7 @@ using System.Security.Claims;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
-    public static class OAuth
+    public static class OAuthGate
     {
         private const string CookieName = "APP_NAME_HERE-auth";
 
@@ -26,7 +26,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
         private const string GuildClaim = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/guilds";
 
-        public static void AddOAuth(this IServiceCollection services, IConfiguration configuration)
+        public static void AddOAuthGate(this IServiceCollection services, IConfiguration configuration)
         {
             var config = configuration.GetSection(nameof(DiscordOptions)).Get<DiscordOptions>();
 
