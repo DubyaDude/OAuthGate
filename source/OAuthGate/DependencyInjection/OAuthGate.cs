@@ -26,33 +26,36 @@ namespace Microsoft.Extensions.DependencyInjection
 
         private const string GuildClaim = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/guilds";
 
+        private static List<string>? _whitelistedGuilds = new List<string>();
+        private static List<string>? _whitelistedUsers = new List<string>();
+
         public static void AddOAuthGate(this IServiceCollection services, IConfiguration configuration)
         {
             var config = configuration.GetSection(nameof(DiscordOptions)).Get<DiscordOptions>();
+
+            _whitelistedGuilds = config?.WhitelistedGuilds != null && config.WhitelistedGuilds.Length > 0 ? config.WhitelistedGuilds.Select(x => x.ToString()).ToList() : null;
+            _whitelistedUsers = config?.WhitelistedUsers != null && config.WhitelistedUsers.Length > 0 ? config.WhitelistedUsers.Select(x => x.ToString()).ToList() : null;
 
             services.AddAuthorization(options =>
             {
                 var policy = new AuthorizationPolicyBuilder()
                     .RequireAuthenticatedUser();
 
-                IEnumerable<string>? whitelistedUsers = config?.WhitelistedUsers != null && config.WhitelistedUsers.Length > 0 ? config.WhitelistedUsers.Select(x => x.ToString()) : null;
-                IEnumerable<string>? whitelistedGuilds = config?.WhitelistedGuilds != null && config.WhitelistedGuilds.Length > 0 ? config.WhitelistedGuilds.Select(x => x.ToString()) : null;
-
-                if (whitelistedUsers != null || whitelistedGuilds != null)
+                if (_whitelistedUsers != null || _whitelistedUsers != null)
                 {
                     policy.RequireAssertion(context =>
                     {
-                        if (whitelistedUsers != null)
+                        if (_whitelistedUsers != null)
                         {
-                            if (whitelistedUsers.Any(id => context.User.HasClaim(ClaimTypes.NameIdentifier, id)))
+                            if (_whitelistedUsers.Any(id => context.User.HasClaim(ClaimTypes.NameIdentifier, id)))
                             {
                                 return true;
                             }
                         }
 
-                        if (whitelistedGuilds != null)
+                        if (_whitelistedGuilds != null)
                         {
-                            if (whitelistedGuilds.Any(id => context.User.HasClaim(GuildClaim, id)))
+                            if (_whitelistedGuilds.Any(id => context.User.HasClaim(GuildClaim, id)))
                             {
                                 return true;
                             }
@@ -125,11 +128,11 @@ namespace Microsoft.Extensions.DependencyInjection
             var responseString = (await response.Content.ReadAsStringAsync());
             LogRequest($"Guilds Return: {responseString}", context.HttpContext, context.Identity?.Claims);
             var payload = JArray.Parse(responseString).Select(j => j["id"]?.ToString());
-            if (payload != null)
+            if (payload != null && _whitelistedGuilds != null)
             {
                 foreach (var id in payload)
                 {
-                    if (id != null)
+                    if (!string.IsNullOrEmpty(id) && _whitelistedGuilds.Contains(id))
                     {
                         Claim claim = new(GuildClaim, id, ClaimValueTypes.String);
                         context?.Identity?.AddClaim(claim);
