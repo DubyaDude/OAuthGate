@@ -14,8 +14,6 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public static class OAuthGate
     {
-        private const string CookieName = "APP_NAME_HERE-auth";
-
         private const string RootPath = "/";
         private const string AuthRootPath = "/auth";
         private const string LoginPath = AuthRootPath + "/login";
@@ -26,6 +24,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
         private const string GuildClaim = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/guilds";
 
+        private static string _authCookieName = string.Empty;
         private static List<string>? _whitelistedGuilds = new List<string>();
         private static List<string>? _whitelistedUsers = new List<string>();
         private static ContentHandling _emailHandling = ContentHandling.None;
@@ -37,6 +36,7 @@ namespace Microsoft.Extensions.DependencyInjection
             _whitelistedGuilds = config?.WhitelistedGuilds != null && config.WhitelistedGuilds.Length > 0 ? config.WhitelistedGuilds.Select(x => x.ToString()).ToList() : null;
             _whitelistedUsers = config?.WhitelistedUsers != null && config.WhitelistedUsers.Length > 0 ? config.WhitelistedUsers.Select(x => x.ToString()).ToList() : null;
             _emailHandling = config?.EmailHandling ?? ContentHandling.None;
+            _authCookieName = string.IsNullOrEmpty(config?.AuthCookieName) ? "APP_NAME_HERE-auth" : config.AuthCookieName;
 
             services.AddAuthorization(options =>
             {
@@ -100,7 +100,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 })
                 .AddCookie(options =>
                 {
-                    options.Cookie.Name = CookieName;
+                    options.Cookie.Name = _authCookieName;
 #if !DEBUG
                     options.Cookie.SameSite = SameSiteMode.Strict;
                     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
@@ -122,10 +122,9 @@ namespace Microsoft.Extensions.DependencyInjection
                     options.CallbackPath = new PathString(CallbackPath);
 
                     options.Scope.Add("identify");
-                    options.Scope.Add("email");
                     options.Scope.Add("guilds");
 
-                    if(_emailHandling == ContentHandling.LogOnly ||  _emailHandling == ContentHandling.LogAndRequire)
+                    if(_emailHandling == ContentHandling.Log ||  _emailHandling == ContentHandling.LogAndRequire)
                     {
                         options.Scope.Add("email");
                     }
@@ -134,9 +133,9 @@ namespace Microsoft.Extensions.DependencyInjection
                     options.ClaimActions.MapJsonKey(ClaimTypes.Name, "username");
                     options.ClaimActions.MapJsonKey("urn:discord:avatar", "avatar");
 
-                    if (_emailHandling == ContentHandling.LogOnly || _emailHandling == ContentHandling.LogAndRequire)
+                    if (_emailHandling == ContentHandling.Log || _emailHandling == ContentHandling.LogAndRequire)
                     {
-                    options.ClaimActions.MapJsonKey(ClaimTypes.Email, "email");
+                        options.ClaimActions.MapJsonKey(ClaimTypes.Email, "email");
                     }
 
                     options.Events.OnCreatingTicket = async context => await OnCreatingTicket(context);
@@ -219,7 +218,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 {
                     LogRequest("Logout", context, context.User.Claims);
 
-                    context.Response.Cookies.Delete(CookieName);
+                    context.Response.Cookies.Delete(_authCookieName);
                     await context.SignOutAsync();
 
                     await WriteResponse(context.Response, StatusCodes.Status200OK, "Signed Out");
