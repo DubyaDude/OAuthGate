@@ -13,7 +13,8 @@ Configure the `appsettings.json` like so:
     "Secret": "0"
   },
   "WhitelistedServers": [ 0, 1 ],
-  "WhitelistedUsers": [ 0, 1 ]
+  "WhitelistedUsers": [ 0, 1 ],
+  "EmailHandling":  "LogAndRequire"
 }
 ```
 - Client.Id: The Client ID of the Discord Application.
@@ -23,6 +24,11 @@ Configure the `appsettings.json` like so:
 - WhitelistedGuilds: Whitelisted Discord Guild Ids. (The needs to be part of the guild)
 
 - WhitelistedUsers: Whitelisted Discord Discord User Ids.
+
+- EmailHandling: How to handle email
+  - None: Do not ask for email when calling Discord OAuth.
+  - Log: Ask for email when calling Discord OAuth.
+  - LogAndRequire: Ask for email when calling Discord OAuth and check that an email was given from the callback.
 
 **Whitelist Behaviour** - A user must be part of either Whitelisted Guilds or Whitelisted Users if either one has a value. If both are null/empty, any Discord Login will be allowed.
 
