@@ -41,7 +41,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 var policy = new AuthorizationPolicyBuilder()
                     .RequireAuthenticatedUser();
 
-                if (_whitelistedUsers != null || _whitelistedUsers != null)
+                if (_whitelistedGuilds != null || _whitelistedUsers != null)
                 {
                     policy.RequireAssertion(context =>
                     {
