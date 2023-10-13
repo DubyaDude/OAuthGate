@@ -5,7 +5,7 @@
         public DiscordClientOptions Client { get; set; } = new();
         public ulong[]? WhitelistedGuilds { get; set; } = null;
         public ulong[]? WhitelistedUsers { get; set; } = null;
-        public ContentHandling EmailHandling { get; set; } = ContentHandling.LogAndRequire;
+        public ContentHandling EmailHandling { get; set; } = ContentHandling.None;
     }
 
     public class DiscordClientOptions
@@ -17,7 +17,7 @@
     public enum ContentHandling
     {
         None,
-        LogOnly,
+        Log,
         LogAndRequire
     }
 }
