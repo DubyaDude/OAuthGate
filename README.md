@@ -14,7 +14,7 @@ Configure the `appsettings.json` like so:
   },
   "WhitelistedServers": [ 0, 1 ],
   "WhitelistedUsers": [ 0, 1 ],
-  "EmailHandling":  "LogAndRequire"
+  "EmailHandling":  "None"
 }
 ```
 - Client.Id: The Client ID of the Discord Application.
