@@ -256,8 +256,8 @@ namespace Microsoft.Extensions.DependencyInjection
 
         private static bool HasClaim(ClaimsPrincipal principal, string claimName)
         {
-            var idClaim = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            if (idClaim != null && !string.IsNullOrEmpty(idClaim.Value))
+            var claim = principal.Claims.FirstOrDefault(c => c.Type == claimName);
+            if (claim != null && !string.IsNullOrEmpty(claim.Value))
             {
                 return true;
             }
