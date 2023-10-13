@@ -28,6 +28,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
         private static List<string>? _whitelistedGuilds = new List<string>();
         private static List<string>? _whitelistedUsers = new List<string>();
+        private static ContentHandling _emailHandling = ContentHandling.None;
 
         public static void AddOAuthGate(this IServiceCollection services, IConfiguration configuration)
         {
@@ -35,11 +36,35 @@ namespace Microsoft.Extensions.DependencyInjection
 
             _whitelistedGuilds = config?.WhitelistedGuilds != null && config.WhitelistedGuilds.Length > 0 ? config.WhitelistedGuilds.Select(x => x.ToString()).ToList() : null;
             _whitelistedUsers = config?.WhitelistedUsers != null && config.WhitelistedUsers.Length > 0 ? config.WhitelistedUsers.Select(x => x.ToString()).ToList() : null;
+            _emailHandling = config?.EmailHandling ?? ContentHandling.None;
 
             services.AddAuthorization(options =>
             {
                 var policy = new AuthorizationPolicyBuilder()
                     .RequireAuthenticatedUser();
+
+                policy.RequireAssertion(context =>
+                {
+                    if (!HasClaim(context.User, ClaimTypes.NameIdentifier))
+                    {
+                        return false;
+                    }
+
+                    if (!HasClaim(context.User, ClaimTypes.Name))
+                    {
+                        return false;
+                    }
+
+                    if (_emailHandling == ContentHandling.LogAndRequire)
+                    {
+                        if (!HasClaim(context.User, ClaimTypes.Email))
+                        {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                });
 
                 if (_whitelistedGuilds != null || _whitelistedUsers != null)
                 {
@@ -100,10 +125,19 @@ namespace Microsoft.Extensions.DependencyInjection
                     options.Scope.Add("email");
                     options.Scope.Add("guilds");
 
+                    if(_emailHandling == ContentHandling.LogOnly ||  _emailHandling == ContentHandling.LogAndRequire)
+                    {
+                        options.Scope.Add("email");
+                    }
+
                     options.ClaimActions.MapJsonKey(ClaimTypes.NameIdentifier, "id");
                     options.ClaimActions.MapJsonKey(ClaimTypes.Name, "username");
                     options.ClaimActions.MapJsonKey("urn:discord:avatar", "avatar");
+
+                    if (_emailHandling == ContentHandling.LogOnly || _emailHandling == ContentHandling.LogAndRequire)
+                    {
                     options.ClaimActions.MapJsonKey(ClaimTypes.Email, "email");
+                    }
 
                     options.Events.OnCreatingTicket = async context => await OnCreatingTicket(context);
                     options.Events.OnRemoteFailure = async context => await OnAuthFail(context.HttpContext, context.Response);
@@ -219,6 +253,17 @@ namespace Microsoft.Extensions.DependencyInjection
                 });
 
             return app;
+        }
+
+        private static bool HasClaim(ClaimsPrincipal principal, string claimName)
+        {
+            var idClaim = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+            if (idClaim != null && !string.IsNullOrEmpty(idClaim.Value))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         private static async Task OnAuthFail(HttpContext context, HttpResponse response)
