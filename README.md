@@ -8,6 +8,7 @@ This project allows one to secure a NGINX reverse proxied site via Discord OAuth
 Configure the `appsettings.json` like so:
 ```json
 "DiscordOptions": {
+  "AuthCookieName": "APP_NAME_HERE-auth",
   "Client": {
     "Id": 0,
     "Secret": "0"
@@ -17,6 +18,8 @@ Configure the `appsettings.json` like so:
   "EmailHandling":  "None"
 }
 ```
+- AuthCookieName: The name of the Authentication Cookie.
+
 - Client.Id: The Client ID of the Discord Application.
 
 - Client.Secret: The Secret of the Discord Application.
