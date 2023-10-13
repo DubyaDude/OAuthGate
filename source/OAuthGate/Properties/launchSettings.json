@@ -1,12 +1,4 @@
 {
-  "iisSettings": {
-    "windowsAuthentication": false,
-    "anonymousAuthentication": true,
-    "iisExpress": {
-      "applicationUrl": "http://localhost:7160",
-      "sslPort": 7161
-    }
-  },
   "profiles": {
     "NginxOAuth": {
       "commandName": "Project",
