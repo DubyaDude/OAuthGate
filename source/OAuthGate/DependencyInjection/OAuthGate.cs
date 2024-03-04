@@ -222,8 +222,7 @@ namespace Microsoft.Extensions.DependencyInjection
                             var responseString = (await response.Content.ReadAsStringAsync());
                             LogRequest($"Guild Members Return [{guild}]: {responseString}", context.HttpContext, context.Identity?.Claims);
 
-
-                            var payload = JToken.Parse(responseString)["Roles"]?.Select(x => x.ToString());
+                            var payload = JObject.Parse(responseString)["roles"]?.Select(x => x.ToString());
                             if (payload != null)
                             {
                                 foreach (var role in payload)
