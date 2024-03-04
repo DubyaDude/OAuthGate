@@ -27,14 +27,17 @@ namespace Microsoft.Extensions.DependencyInjection
         private static string _authCookieName = string.Empty;
         private static List<string>? _whitelistedGuilds = new List<string>();
         private static List<string>? _whitelistedUsers = new List<string>();
+        private static Dictionary<string, string[]>? _whitelistedRoles = new Dictionary<string, string[]>();
         private static ContentHandling _emailHandling = ContentHandling.None;
 
         public static void AddOAuthGate(this IServiceCollection services, IConfiguration configuration)
         {
             var config = configuration.GetSection(nameof(DiscordOptions)).Get<DiscordOptions>();
 
-            _whitelistedGuilds = config?.WhitelistedGuilds != null && config.WhitelistedGuilds.Length > 0 ? config.WhitelistedGuilds.Select(x => x.ToString()).ToList() : null;
             _whitelistedUsers = config?.WhitelistedUsers != null && config.WhitelistedUsers.Length > 0 ? config.WhitelistedUsers.Select(x => x.ToString()).ToList() : null;
+            _whitelistedGuilds = config?.WhitelistedGuilds != null && config.WhitelistedGuilds.Length > 0 ? config.WhitelistedGuilds.Select(x => x.ToString()).ToList() : null;
+            _whitelistedRoles = config?.WhitelistedRoles != null && config.WhitelistedRoles.Count > 0 ? config.WhitelistedRoles.ToDictionary(x => x.Key.ToString(), x => x.Value.Select(y => y.ToString()).ToArray()) : null;
+
             _emailHandling = config?.EmailHandling ?? ContentHandling.None;
             _authCookieName = string.IsNullOrEmpty(config?.AuthCookieName) ? "APP_NAME_HERE-auth" : config.AuthCookieName;
 
@@ -66,7 +69,7 @@ namespace Microsoft.Extensions.DependencyInjection
                     return true;
                 });
 
-                if (_whitelistedGuilds != null || _whitelistedUsers != null)
+                if (_whitelistedUsers != null || _whitelistedGuilds != null || _whitelistedRoles != null)
                 {
                     policy.RequireAssertion(context =>
                     {
@@ -81,6 +84,14 @@ namespace Microsoft.Extensions.DependencyInjection
                         if (_whitelistedGuilds != null)
                         {
                             if (_whitelistedGuilds.Any(id => context.User.HasClaim(GuildClaim, id)))
+                            {
+                                return true;
+                            }
+                        }
+
+                        if (_whitelistedRoles != null)
+                        {
+                            if (_whitelistedRoles.Any(kvp => kvp.Value.Any(role => context.User.HasClaim(ClaimTypes.Role, $"{kvp.Key}.{role}"))))
                             {
                                 return true;
                             }
@@ -122,9 +133,17 @@ namespace Microsoft.Extensions.DependencyInjection
                     options.CallbackPath = new PathString(CallbackPath);
 
                     options.Scope.Add("identify");
-                    options.Scope.Add("guilds");
+                    if (_whitelistedGuilds != null || _whitelistedRoles != null)
+                    {
+                        options.Scope.Add("guilds");
 
-                    if(_emailHandling == ContentHandling.Log ||  _emailHandling == ContentHandling.LogAndRequire)
+                        if (_whitelistedRoles != null)
+                        {
+                            options.Scope.Add("guilds.members.read");
+                        }
+                    }
+
+                    if (_emailHandling == ContentHandling.Log || _emailHandling == ContentHandling.LogAndRequire)
                     {
                         options.Scope.Add("email");
                     }
@@ -147,28 +166,76 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             LogRequest("Creating Ticket", context.HttpContext, context.Identity?.Claims);
 
-            var request = new HttpRequestMessage(HttpMethod.Get, "https://discordapp.com/api/users/@me/guilds");
 
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json));
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
-
-            var response = await context.Backchannel.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, CancellationToken.None);
-            if (!response.IsSuccessStatusCode)
+            if (_whitelistedGuilds != null || _whitelistedRoles != null)
             {
-                throw new HttpRequestException("Failed to get guilds");
-            }
-
-            var responseString = (await response.Content.ReadAsStringAsync());
-            LogRequest($"Guilds Return: {responseString}", context.HttpContext, context.Identity?.Claims);
-            var payload = JArray.Parse(responseString).Select(j => j["id"]?.ToString());
-            if (payload != null && _whitelistedGuilds != null)
-            {
-                foreach (var id in payload)
+                List<string> whitelistedRoleGuilds = new();
                 {
-                    if (!string.IsNullOrEmpty(id) && _whitelistedGuilds.Contains(id))
+                    var request = new HttpRequestMessage(HttpMethod.Get, "https://discordapp.com/api/users/@me/guilds");
+                    request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json));
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
+
+                    var response = await context.Backchannel.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, CancellationToken.None);
+                    if (!response.IsSuccessStatusCode)
                     {
-                        Claim claim = new(GuildClaim, id, ClaimValueTypes.String);
-                        context?.Identity?.AddClaim(claim);
+                        throw new HttpRequestException("Failed to get guilds");
+                    }
+                    var responseString = (await response.Content.ReadAsStringAsync());
+                    LogRequest($"Guilds Return: {responseString}", context.HttpContext, context.Identity?.Claims);
+                    var payload = JArray.Parse(responseString).Select(j => j["id"]?.ToString());
+
+                    if (payload != null)
+                    {
+                        foreach (var id in payload)
+                        {
+                            if (!string.IsNullOrEmpty(id))
+                            {
+                                if (_whitelistedGuilds != null && _whitelistedGuilds.Contains(id))
+                                {
+                                    Claim claim = new(GuildClaim, id, ClaimValueTypes.String);
+                                    context.Identity?.AddClaim(claim);
+                                }
+
+                                if (_whitelistedRoles != null && _whitelistedRoles.ContainsKey(id))
+                                {
+                                    whitelistedRoleGuilds.Add(id);
+                                }
+                            }
+                        }
+                    }
+                }
+                {
+                    if (_whitelistedRoles != null && whitelistedRoleGuilds.Count > 0)
+                    {
+                        foreach (var guild in whitelistedRoleGuilds)
+                        {
+                            var request = new HttpRequestMessage(HttpMethod.Get, $"https://discordapp.com/api/users/@me/guilds/{guild}/member");
+                            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json));
+                            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
+
+                            var response = await context.Backchannel.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, CancellationToken.None);
+                            if (!response.IsSuccessStatusCode)
+                            {
+                                throw new HttpRequestException("Failed to get guild members");
+                            }
+
+                            var responseString = (await response.Content.ReadAsStringAsync());
+                            LogRequest($"Guild Members Return [{guild}]: {responseString}", context.HttpContext, context.Identity?.Claims);
+
+
+                            var payload = JToken.Parse(responseString)["Roles"]?.Select(x => x.ToString());
+                            if (payload != null)
+                            {
+                                foreach (var role in payload)
+                                {
+                                    if (!string.IsNullOrEmpty(role) && _whitelistedRoles[guild].Contains(role))
+                                    {
+                                        Claim claim = new(ClaimTypes.Role, $"{guild}.{role}", ClaimValueTypes.String);
+                                        context.Identity?.AddClaim(claim);
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
