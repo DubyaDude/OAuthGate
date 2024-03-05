@@ -13,8 +13,12 @@ Configure the `appsettings.json` like so:
     "Id": 0,
     "Secret": "0"
   },
-  "WhitelistedServers": [ 0, 1 ],
   "WhitelistedUsers": [ 0, 1 ],
+  "WhitelistedGuilds": [ 0, 1 ],
+  "WhitelistedRoles": {
+      "0": [ 1, 2 ],
+      "3": [ 4, 5 ]
+    },
   "EmailHandling":  "None"
 }
 ```
@@ -24,9 +28,11 @@ Configure the `appsettings.json` like so:
 
 - Client.Secret: The Secret of the Discord Application.
 
-- WhitelistedGuilds: Whitelisted Discord Guild Ids. (The needs to be part of the guild)
-
 - WhitelistedUsers: Whitelisted Discord Discord User Ids.
+
+- WhitelistedGuilds: Whitelisted Discord Guild Ids. (They need to be part of the guild)
+
+- WhitelistedRoles: Whitelisted Discord Guild Role Ids. (They need to be part of the guild and have the role)
 
 - EmailHandling: How to handle email
   - None: Do not ask for email when calling Discord OAuth.
