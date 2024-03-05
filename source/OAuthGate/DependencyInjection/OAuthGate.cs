@@ -25,9 +25,9 @@ namespace Microsoft.Extensions.DependencyInjection
         private const string GuildClaim = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/guilds";
 
         private static string _authCookieName = string.Empty;
-        private static List<string>? _whitelistedGuilds = new List<string>();
-        private static List<string>? _whitelistedUsers = new List<string>();
-        private static Dictionary<string, string[]>? _whitelistedRoles = new Dictionary<string, string[]>();
+        private static List<string>? _whitelistedGuilds = [];
+        private static List<string>? _whitelistedUsers = [];
+        private static Dictionary<string, string[]>? _whitelistedRoles = [];
         private static ContentHandling _emailHandling = ContentHandling.None;
 
         public static void AddOAuthGate(this IServiceCollection services, IConfiguration configuration)
@@ -169,7 +169,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             if (_whitelistedGuilds != null || _whitelistedRoles != null)
             {
-                List<string> whitelistedRoleGuilds = new();
+                List<string> whitelistedRoleGuilds = [];
                 {
                     var request = new HttpRequestMessage(HttpMethod.Get, "https://discordapp.com/api/users/@me/guilds");
                     request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json));
@@ -254,7 +254,7 @@ namespace Microsoft.Extensions.DependencyInjection
                     if (string.IsNullOrEmpty(returnurl))
                         returnurl = RootPath;
 
-                    context.Response.Headers.Add("Refresh", $"0; url={returnurl}");
+                    context.Response.Headers.Append("Refresh", $"0; url={returnurl}");
                     context.Response.StatusCode = StatusCodes.Status200OK;
 
                     await Task.CompletedTask;
