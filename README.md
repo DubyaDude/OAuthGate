@@ -1,6 +1,6 @@
 # OAuthGate - A NGINX Discord OAuth Reverse Proxy
 
-This project allows one to secure a NGINX reverse proxied site via Discord OAuth.
+This project allows securing an NGINX reverse proxied site via Discord OAuth.
 
 ## Setting up OAuthGate Process
 
@@ -28,20 +28,20 @@ Configure the `appsettings.json` like so:
 
 - Client.Secret: The Secret of the Discord Application.
 
-- WhitelistedUsers: Whitelisted Discord Discord User Ids.
+- WhitelistedUsers: Whitelisted Discord Discord User IDs.
 
-- WhitelistedGuilds: Whitelisted Discord Guild Ids. (They need to be part of the guild)
+- WhitelistedGuilds: Whitelisted Discord Guild IDs. (They need to be part of the guild)
 
 - WhitelistedRoles: Whitelisted Discord Guild Role Ids. (They need to be part of the guild and have the role)
 
 - EmailHandling: How to handle email
-  - None: Do not ask for email when calling Discord OAuth.
+  - None: Do not ask for an email when calling Discord OAuth.
   - Log: Ask for email when calling Discord OAuth.
   - LogAndRequire: Ask for email when calling Discord OAuth and check that an email was given from the callback.
 
-**Whitelist Behaviour** - A user must be part of either Whitelisted Guilds or Whitelisted Users if either one has a value. If both are null/empty, any Discord Login will be allowed.
+**Whitelist Behaviour** - A user must be part of either Whitelisted Guilds, Whitelisted Roles, or Whitelisted Users if either one has a value. If all are null/empty, any Discord Login will be allowed.
 
-### Running on Dfferent Port
+### Running on Different Port
 To run the process on a specific port, start the OAuthGate project like so:
 ```
 ./OAuthGate --urls=https://localhost:7161
@@ -49,4 +49,4 @@ To run the process on a specific port, start the OAuthGate project like so:
 
 ## Setting up NGINX Config
 
-Use the [nginx.conf](https://github.com/DubyaDude/nginx-discord-oauth-reverse-proxy/blob/master/nginx.conf) file in the repos root and replace any instance of `https://localhost:7161` if you end up using a different port.
+Use the [nginx.conf](https://github.com/DubyaDude/nginx-discord-oauth-reverse-proxy/blob/master/nginx.conf) file in the root of the repo and replace any instance of `https://localhost:7161` if you end up using a different port.
